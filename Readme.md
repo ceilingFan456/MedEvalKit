@@ -29,9 +29,17 @@ We welcome contributions of new models, benchmarks, or enhanced evaluation metri
 ---
 
 ## Eval Results
+### MultiModal Eval Results
 <p align="center">
   <a>
-    <img src="assets/eval.png">
+    <img src="assets/mm_eval.png">
+  </a>
+</p>
+
+### Text-Only Eval Results
+<p align="center">
+  <a>
+    <img src="assets/text_eval.png">
   </a>
 </p>
 

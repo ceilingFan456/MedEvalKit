@@ -51,7 +51,6 @@ joblib==1.5.1
 jsonschema==4.24.0
 jsonschema-specifications==2025.4.1
 lark==1.2.2
--e git+https://github.com/LLaVA-VL/LLaVA-NeXT.git@b42941ceba259d5df18f8df8193a3897296a0449#egg=llava
 llguidance==0.7.29
 llvmlite==0.44.0
 lm-format-enforcer==0.10.11
