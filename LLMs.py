@@ -125,7 +125,10 @@ class VllmText:
 @LLMRegistry.register("MedGemma")
 class MedGemma:
     def __new__(cls, model_path: str, args: Any) -> Any:
-        from models.MedGemma.MedGemma import MedGemma
+        if os.environ.get("use_vllm", "True") == "True":
+            from models.MedGemma.MedGemma_vllm import MedGemma
+        else:
+            from models.MedGemma.MedGemma_hf import MedGemma
         return MedGemma(model_path, args)
 
 @LLMRegistry.register("Med_Flamingo")
