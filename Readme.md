@@ -48,7 +48,6 @@ We welcome contributions of new models, benchmarks, or enhanced evaluation metri
 
 ## 🔥 Latest News
 * **2025-06-12** - Initial release of MedEvalKit v1.0!
-
 ---
 
 ## 🧪 Supported Benchmarks
