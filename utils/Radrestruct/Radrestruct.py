@@ -27,7 +27,8 @@ class Radrestruct(BaseDataset):
     
     def load_data(self):
         dataset_path = self.dataset_path
-        with open(dataset_path, "r") as f:
+        json_path = os.path.join(dataset_path,"testset.json")
+        with open(json_path, "r") as f:
             dataset = json.load(f)
 
         # ['index', 'Figure_path', 'Caption', 'Question', 'Choice A', 'Choice B', 'Choice C', 'Choice D', 'Answer', 'split']
