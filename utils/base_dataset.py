@@ -12,7 +12,6 @@ class BaseDataset:
     self.chunk_idx = int(os.environ.get("chunk_idx",0))
     self.num_chunks = int(os.environ.get("num_chunks",1))
 
-
   def run(self,samples,model,batch_size = 2000):
     out_samples = []
     with torch.no_grad():
@@ -52,7 +51,6 @@ class BaseDataset:
   def construct_messages(self):
     pass
 
-
   def eval(self):
       model = self.model
       dataset_path = self.dataset_path
@@ -69,7 +67,6 @@ class BaseDataset:
           save_json(matric_path,metrics)
           save_json(results_path,out_samples)
           return metrics
-
 
       elif num_chunks > 1:
         results_path = os.path.join(output_path,f"results_{chunk_idx}.json")
