@@ -1,18 +1,13 @@
-import torch
+
 import os
 import json
-import gc
-import csv
-
 from PIL import Image
-from datasets import load_dataset,load_from_disk
-from collections import defaultdict
 from tqdm import tqdm
-
-from ..utils import save_json,extract,judge_multi_choice,judger,judge_judgement,judge_open_end_vqa,get_compare_messages,judge_close_end_vqa
+from pydash import at
 from mathruler.grader import extract_boxed_content
+from ..question_formats import get_judgement_prompt,get_multiple_choice_prompt
+from ..utils import save_json,extract,judge_multi_choice,judge_close_end_vqa,judge_judgement
 from ..base_dataset import BaseDataset
-from ..question_formats import get_judgement_prompt,get_close_ended_prompt
 
 class Radrestruct(BaseDataset):
     def __init__(self,model,dataset_path,output_path):
@@ -27,48 +22,79 @@ class Radrestruct(BaseDataset):
     
     def load_data(self):
         dataset_path = self.dataset_path
-        json_path = os.path.join(dataset_path,"testset.json")
-        with open(json_path, "r") as f:
-            dataset = json.load(f)
+        id_to_img_mapping_path = os.path.join(dataset_path,"id_to_img_mapping_frontal_reports.json")
+        reports_path = os.listdir(os.path.join(dataset_path,"test_qa_pairs"))
+        answer_options_path = os.path.join(dataset_path,"answer_options.json")
+
+
+        dataset = []
+
+        with open(id_to_img_mapping_path, "r") as f:
+            id_to_img_mapping_frontal_reports = json.load(f)
+
+        
+        for report_file in reports_path:
+            for elem in id_to_img_mapping_frontal_reports[report_file.split(".")[0]]:
+                dataset.append((report_file,elem))
+
+        with open(answer_options_path, "r") as f:
+            answer_options = json.load(f)
 
         # ['index', 'Figure_path', 'Caption', 'Question', 'Choice A', 'Choice B', 'Choice C', 'Choice D', 'Answer', 'split']
         for idx,sample in tqdm(enumerate(dataset)):
             if idx % self.num_chunks == self.chunk_idx:
-                sample = self.construct_messages(sample)
-                self.samples.append(sample)
+                samples = self.construct_messages(sample,answer_options)
+                self.samples.extend(samples)
         return self.samples
 
-    def construct_messages(self,sample):
-        image_name = sample["image_name"]
-        question = sample["question"]
-        is_reasoning = True if os.environ.get("REASONING","False") == "True" else False
-        question_type = sample["question_type"]
-        if question_type == "CLOSED":
-            prompt = get_judgement_prompt(question,is_reasoning)
-        else:
-            prompt = get_close_ended_prompt(question,is_reasoning)
-        image_path = os.path.join(self.dataset_path,"imgs",image_name)
-        img = Image.open(image_path).convert("RGB")
-        messages = {"prompt":prompt,"image":img}
-        sample["messages"] = messages
-        return sample
+    def construct_messages(self,sample,answer_options):
+        report,img = sample
+        report_id = report.split(".")[0]
+        img_path = os.path.join(self.dataset_path,"imgs",f"{img}.png")
+        img = Image.open(img_path).convert("RGB")
+
+        sample = {}
+        samples = []
+        with open(os.path.join(self.dataset_path,"test_qa_pairs",report), "r") as f:
+            qa_pairs = json.load(f)
+        
+        for qa_pair_idx,qa_pair in enumerate(qa_pairs):
+            question,answer,history,info = qa_pair
+            options = info["options"]
+            answer_idxs = at(answer_options,*options)
+            answer_type = info["answer_type"]
+        
+            is_reasoning = True if os.environ.get("REASONING","False") == "True" else False
+            if answer_type == "single_choice":
+                prompt = get_judgement_prompt(question,is_reasoning)
+            else:
+                prompt = get_multiple_choice_prompt(question,options,is_reasoning)
+            messages = {"prompt":prompt,"image":img}
+            sample["messages"] = messages
+            sample["answer_type"] = answer_type
+            sample["question"] = question
+            sample["choices"] = options
+            sample["answer"] = answer[0]
+            samples.append(sample)
+        return samples
 
 
     def cal_metrics(self,out_samples):
-        messages_list = []
-
         metrics = {
             "total metrics" : {
                 "total":0,
                 "right":0
             },
-            "close" : {
+            "single_choice" : {
+                "total" : 0,
+                "right" : 0
+            },
+            "multiple_choice" : {
                 "total" : 0,
                 "right" : 0
             }
         }
 
-        open_id = []
         for i,out_sample in tqdm(enumerate(out_samples)):
             response = out_sample["response"]
             if extract_boxed_content(response)!= "None":
@@ -78,59 +104,29 @@ class Radrestruct(BaseDataset):
 
             answer = out_sample["answer"]
             question = out_sample["question"]
-            answer_type = out_sample["question_type"]
+            answer_type = out_sample["answer_type"]
+            choices = out_sample["choices"]
             answer = answer.lower().strip()
             response = response.lower().strip()
 
             metrics["total metrics"]["total"] += 1
-            if answer_type == "CLOSED":
-                metrics["close"]["total"] += 1
+            if answer_type == "single_choice":
+                metrics["single_choice"]["total"] += 1
                 correct = judge_judgement(answer,response)
                 out_samples[i]["correct"] = correct
                 if correct:
-                    metrics["close"]["right"] += 1
+                    metrics["single_choice"]["right"] += 1
                     metrics["total metrics"]["right"] += 1
             else:
-                metrics["open"]["total"] += 1
-
-                c_metrics = judge_close_end_vqa(answer,response)
-                out_samples[i]["correct"] = c_metrics["em"]
-                out_samples[i]["metrics"] = c_metrics
-                if c_metrics["em"]:
-                    metrics["total metrics"]["right"] += 1
-                    metrics["open"]["right"] += 1 
-                for metric in c_metrics:
-                    metrics["open"][metric] += c_metrics[metric] 
-
-                if os.environ.get("use_llm_judge","False") == "True":
-                    messages = get_compare_messages(question,response,answer)
-                    messages_list.append(messages)
-                    open_id.append(i)
-
-        if os.environ.get("use_llm_judge","False") == "True":
-            metrics["total metrics"]["right"] = 0
-            metrics["open"]["right"] = 0
-            metrics["close"]["right"] = 0
-            llm = judger
-            results = llm.generate_outputs(messages_list)
-            for i,result in zip(open_id,results):
-                result = extract(result,"judge")
-                result = True if result == "0" else False
-                out_samples[i]["correct"] = result
-                if result:
-                    metrics["open"]["right"] += 1
+                metrics["multiple_choice"]["total"] += 1
+                correct = judge_multi_choice(choices,answer,response)
+                out_samples[i]["correct"] = correct
+                if correct:
+                    metrics["multiple_choice"]["right"] += 1
                     metrics["total metrics"]["right"] += 1
 
-        
         metrics["total metrics"]["acc"] = metrics["total metrics"]["right"]/metrics["total metrics"]["total"]
-        metrics["open"]["acc"] = metrics["open"]["right"]/metrics["open"]["total"]
-        metrics["close"]["acc"] = metrics["close"]["right"]/metrics["close"]["total"]
+        metrics["single_choice"]["acc"] = metrics["single_choice"]["right"]/metrics["single_choice"]["total"]
+        metrics["multiple_choice"]["acc"] = metrics["multiple_choice"]["right"]/metrics["multiple_choice"]["total"]
 
-        for metric in metrics["open"]:
-            if metric not in ["right","total"]:
-                metrics["open"][metric] = metrics["open"][metric]/metrics["open"]["total"]
         return metrics,out_samples
-
-
-
-                
