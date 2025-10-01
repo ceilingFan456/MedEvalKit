@@ -5,8 +5,8 @@ EVAL_DATASETS="Medbullets_op4"
 DATASETS_PATH="hf"
 OUTPUT_PATH="eval_results/{}"
 # TestModel,Qwen2-VL,Qwen2.5-VL,BiMediX2,LLava_Med,Huatuo,InternVL,Llama-3.2,LLava,Janus,HealthGPT,BiomedGPT,Vllm_Text,MedGemma,Med_Flamingo,MedDr
-MODEL_NAME="Qwen2.5-VL"
-MODEL_PATH="Qwen2.5-VL-7B-Instruct"
+MODEL_NAME="ShowO"
+MODEL_PATH="/home/azureuser/disk/models/show-o"
 
 #vllm setting
 CUDA_VISIBLE_DEVICES="0"
@@ -27,7 +27,7 @@ TOP_P=0.0001
 REPETITION_PENALTY=1
 
 # LLM judge setting
-USE_LLM_JUDGE="True"
+USE_LLM_JUDGE="False"
 # gpt api model name
 GPT_MODEL="gpt-4.1-2025-04-14"
 JUDGE_MODEL_TYPE="openai"  # openai or gemini or deepseek or claude

@@ -143,6 +143,16 @@ class MedDr:
         from models.MedDr.MedDr import MedDr
         return MedDr(model_path, args)
 
+@LLMRegistry.register("ShowO")
+class ShowO:
+    def __new__(cls, model_path: str, args: Any) -> Any:
+        # Check if user wants vLLM backend or HF
+        if os.environ.get("use_vllm", "True") == "True":
+            from models.ShowO.ShowO_vllm import ShowO
+        else:
+            from models.ShowO.ShowO_hf import ShowO
+        return ShowO(model_path, args)
+
 def init_llm(args):
     try:
         model_class = LLMRegistry.get_model(args.model_name)
