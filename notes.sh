@@ -23,3 +23,6 @@ git clone https://huggingface.co/ShowLab/Show-o
 
 ## to install the rest of the packages.
 pip install -r pip.txt 
+
+# undo last commit but keep changes staged
+git reset --soft HEAD~1

@@ -147,10 +147,7 @@ class MedDr:
 class ShowO:
     def __new__(cls, model_path: str, args: Any) -> Any:
         # Check if user wants vLLM backend or HF
-        if os.environ.get("use_vllm", "True") == "True":
-            from models.ShowO.ShowO_vllm import ShowO
-        else:
-            from models.ShowO.ShowO_hf import ShowO
+        from models.ShowO.ShowO_vllm import ShowO
         return ShowO(model_path, args)
 
 def init_llm(args):
