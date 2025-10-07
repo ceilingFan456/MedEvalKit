@@ -12,3 +12,14 @@ pip install flash-attn --no-build-isolation
 # For LLaVA-like models
 git clone https://github.com/LLaVA-VL/LLaVA-NeXT.git
 cd LLaVA-NeXT && pip install -e .
+
+## download qwen model from huggingface.
+sudo apt-get install git-lfs
+git lfs install
+git clone https://huggingface.co/Qwen/Qwen2.5-7B-Instruct
+
+## download show-o model from huggingface.
+git clone https://huggingface.co/ShowLab/Show-o
+
+## to install the rest of the packages.
+pip install -r pip.txt 
