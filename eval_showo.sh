@@ -2,7 +2,8 @@
 export HF_ENDPOINT=https://hf-mirror.com
 # MMMU-Medical-test,MMMU-Medical-val,PMC_VQA,MedQA_USMLE,MedMCQA,PubMedQA,OmniMedVQA,Medbullets_op4,Medbullets_op5,MedXpertQA-Text,MedXpertQA-MM,SuperGPQA,HealthBench,IU_XRAY,CheXpert_Plus,MIMIC_CXR,CMB,CMExam,CMMLU,MedQA_MCMLE,VQA_RAD,SLAKE,PATH_VQA,MedFrameQA,Radrestruct
 # EVAL_DATASETS="Medbullets_op4" 
-EVAL_DATASETS="MMMU-Medical-test"
+# EVAL_DATASETS="MMMU-Medical-test"
+EVAL_DATASETS="VQA_RAD"
 DATASETS_PATH="hf"
 OUTPUT_PATH="eval_results/showo"
 # TestModel,Qwen2-VL,Qwen2.5-VL,BiMediX2,LLava_Med,Huatuo,InternVL,Llama-3.2,LLava,Janus,HealthGPT,BiomedGPT,Vllm_Text,MedGemma,Med_Flamingo,MedDr
@@ -29,13 +30,13 @@ REPETITION_PENALTY=1
 
 # LLM judge setting
 # USE_LLM_JUDGE="False"
-USE_LLM_JUDGE="True"
+USE_LLM_JUDGE="False"
 # gpt api model name
 # GPT_MODEL="gpt-4.1-2025-04-14"
 GPT_MODEL="gpt-4o"
 JUDGE_MODEL_TYPE="openai"  # openai or gemini or deepseek or claude
 API_KEY=""
-BASE_URL="https://medevalkit.openai.azure.com/"
+BASE_URL=""
 
 ## shortcut to make the import of showo work
 export PYTHONPATH="$PWD:$PWD/third_party/showo:$PWD/LLaVA-NeXT"
