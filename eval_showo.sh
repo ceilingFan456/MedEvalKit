@@ -1,12 +1,13 @@
 #!/bin/bash
 export HF_ENDPOINT=https://hf-mirror.com
 # MMMU-Medical-test,MMMU-Medical-val,PMC_VQA,MedQA_USMLE,MedMCQA,PubMedQA,OmniMedVQA,Medbullets_op4,Medbullets_op5,MedXpertQA-Text,MedXpertQA-MM,SuperGPQA,HealthBench,IU_XRAY,CheXpert_Plus,MIMIC_CXR,CMB,CMExam,CMMLU,MedQA_MCMLE,VQA_RAD,SLAKE,PATH_VQA,MedFrameQA,Radrestruct
-EVAL_DATASETS="Medbullets_op4" 
+# EVAL_DATASETS="Medbullets_op4" 
+EVAL_DATASETS="MMMU-Medical-test"
 DATASETS_PATH="hf"
-OUTPUT_PATH="eval_results/{}"
+OUTPUT_PATH="eval_results/showo"
 # TestModel,Qwen2-VL,Qwen2.5-VL,BiMediX2,LLava_Med,Huatuo,InternVL,Llama-3.2,LLava,Janus,HealthGPT,BiomedGPT,Vllm_Text,MedGemma,Med_Flamingo,MedDr
 MODEL_NAME="ShowO"
-MODEL_PATH="/home/azureuser/disk/models/show-o"
+MODEL_PATH="/home/t-qimhuang/show-o-w-clip-vit-512x512"
 
 #vllm setting
 CUDA_VISIBLE_DEVICES="0"
@@ -36,6 +37,8 @@ JUDGE_MODEL_TYPE="openai"  # openai or gemini or deepseek or claude
 API_KEY=""
 BASE_URL="https://medevalkit.openai.azure.com/"
 
+## shortcut to make the import of showo work
+export PYTHONPATH="$PWD:$PWD/third_party/showo:$PWD/LLaVA-NeXT"
 
 # pass hyperparameters and run python sccript
 python eval.py \
